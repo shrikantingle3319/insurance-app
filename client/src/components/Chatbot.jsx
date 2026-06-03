@@ -143,20 +143,19 @@ function Chatbot() {
                       key={index}
                       className={`message ${msg.sender}`}
                     >
-
-                      {
-                        msg.sender === "bot" ? (
-
-                          <ReactMarkdown>
-                            {msg.text}
-                          </ReactMarkdown>
-
-                        ) : (
-
-                          msg.text
-                        )
-                      }
-
+                      <div className="message-content">
+                        {
+                          msg.sender === "bot"
+                            ? (
+                                <ReactMarkdown>
+                                  {msg.text}
+                                </ReactMarkdown>
+                              )
+                            : (
+                                <span>{msg.text}</span>
+                              )
+                        }
+                      </div>
                     </div>
                   )
                 )

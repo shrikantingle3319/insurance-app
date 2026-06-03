@@ -1,255 +1,206 @@
 const {
-
   generateInsuranceQuotes
-
-} = require(
-  "../agents/quoteAgent"
-);
+} = require("../agents/quoteAgent");
 
 /* =========================================
    INSURANCE NODE
 ========================================= */
 
-const insuranceNode =
-  async (state) => {
-
-    try {
-
-      /* =====================================
-         VALIDATION RESULT
-      ===================================== */
-
-      const validationResult =
-
-        state.validationResult;
-
-      /* =====================================
-         BLOCK INVALID VEHICLES
-      ===================================== */
-
-      if (
-
-        validationResult?.status !==
-        "TRUE"
-
-      ) {
-
-        return {
-
-          ...state,
-
-          nextStep:
-            "END",
-
-          insuranceResult: {
-
-            success: false,
-
-            message:
-
-              "Insurance quote generation blocked due to validation failure."
-          }
-        };
-      }
-
-      /* =====================================
-         VEHICLE DATA
-      ===================================== */
-
-      const vehicleData =
-
-        state.vehicleData;
-
-      /* =====================================
-         AI VALIDATION CONTEXT
-      ===================================== */
-
-      const aiValidation =
-
-        validationResult
-        ?.aiValidation || {};
-
-      /* =====================================
-         INSURANCE AGENT INPUT
-      ===================================== */
-
-      const insuranceInput = {
-
-        vehicleData,
-
-        aiValidation
-      };
-
-      /* =====================================
-         GENERATE QUOTES
-      ===================================== */
-
-      const insuranceResponse =
-
-        await generateInsuranceQuotes(
-
-          insuranceInput
-        );
-
-      /* =====================================
-         AGENT FAILURE
-      ===================================== */
-
-      if (
-
-        !insuranceResponse.success
-      ) {
-
-        return {
-
-          ...state,
-
-          nextStep:
-            "END",
-
-          insuranceResult: {
-
-            success: false,
-
-            message:
-
-              insuranceResponse.message ||
-
-              "Insurance quote generation failed."
-          }
-        };
-      }
-
-      /* =====================================
-         EMPTY POLICIES
-      ===================================== */
-
-      if (
-
-        !insuranceResponse
-        ?.recommended_policies ||
-
-        insuranceResponse
-        ?.recommended_policies
-        ?.length === 0
-
-      ) {
-
-        return {
-
-          ...state,
-
-          nextStep:
-            "END",
-
-          insuranceResult: {
-
-            success: false,
-
-            message:
-
-              "No insurance plans available for this vehicle profile."
-          }
-        };
-      }
-
-      /* =====================================
-         SORT BY PREMIUM
-      ===================================== */
-
-      const sortedPolicies =
-
-        insuranceResponse
-        .recommended_policies
-        .sort(
-
-          (a, b) => {
-
-            const premiumA =
-
-              parseInt(
-
-                a.premium
-                ?.replace(/[^\d]/g, "")
-
-              ) || 0;
-
-            const premiumB =
-
-              parseInt(
-
-                b.premium
-                ?.replace(/[^\d]/g, "")
-
-              ) || 0;
-
-            return premiumA - premiumB;
-          }
-        );
-
-      /* =====================================
-         TOP RECOMMENDED POLICY
-      ===================================== */
-
-      const bestPolicy =
-
-        sortedPolicies[0];
-
-      /* =====================================
-         FINAL SUCCESS
-      ===================================== */
-
+const insuranceNode = async (state) => {
+  try {
+    const validationResult =
+      state.validationResult;
+
+    /* =====================================
+       BLOCK INVALID VEHICLES
+    ===================================== */
+
+    if (
+      validationResult?.status !==
+      "TRUE"
+    ) {
       return {
-
         ...state,
 
-        nextStep:
-          "COMPLETE",
+        nextStep: "END",
 
         insuranceResult: {
-
-          success: true,
-
-          recommended_policies:
-
-            sortedPolicies,
-
-          best_policy:
-            bestPolicy,
-
-          total_quotes:
-
-            sortedPolicies.length,
-
-          generated_at:
-            new Date()
-        }
-      };
-
-    } catch (error) {
-
-      console.log(
-        "INSURANCE NODE ERROR:"
-      );
-
-      console.log(error);
-
-      return {
-
-        ...state,
-
-        nextStep:
-          "END",
-
-        insuranceResult: {
-
           success: false,
 
           message:
-            "Insurance workflow failed."
+            "Insurance quote generation blocked due to validation failure."
         }
       };
     }
+
+    /* =====================================
+       VEHICLE DATA
+    ===================================== */
+
+    const vehicleData =
+      state.vehicleData;
+
+    const aiValidation =
+      validationResult
+        ?.aiValidation || {};
+
+    /* =====================================
+       INSURANCE INPUT
+    ===================================== */
+
+    const insuranceInput = {
+      vehicleData,
+      aiValidation
+    };
+
+    /* =====================================
+       GENERATE QUOTES
+    ===================================== */
+
+    const insuranceResponse =
+      await generateInsuranceQuotes(
+        insuranceInput
+      );
+
+    console.log(
+      "INSURANCE RESPONSE:"
+    );
+
+    console.log(
+      JSON.stringify(
+        insuranceResponse,
+        null,
+        2
+      )
+    );
+
+    /* =====================================
+       AGENT FAILURE
+    ===================================== */
+
+    if (
+      !insuranceResponse.success
+    ) {
+      return {
+        ...state,
+
+        nextStep: "END",
+
+        insuranceResult: {
+          success: false,
+
+          message:
+            insuranceResponse.message ||
+            "Insurance quote generation failed."
+        }
+      };
+    }
+
+    /* =====================================
+       EXTRACT POLICIES
+    ===================================== */
+
+    const policies =
+      insuranceResponse.policies || [];
+
+    /* =====================================
+       NO POLICIES
+    ===================================== */
+
+    if (
+      policies.length === 0
+    ) {
+      return {
+        ...state,
+
+        nextStep: "END",
+
+        insuranceResult: {
+          success: false,
+
+          message:
+            "No insurance plans available for this vehicle profile."
+        }
+      };
+    }
+
+    /* =====================================
+       SORT POLICIES
+    ===================================== */
+
+    const sortedPolicies =
+      policies.sort((a, b) => {
+        const premiumA =
+          Number(
+            String(
+              a.premium
+            ).replace(/[^\d]/g, "")
+          ) || 0;
+
+        const premiumB =
+          Number(
+            String(
+              b.premium
+            ).replace(/[^\d]/g, "")
+          ) || 0;
+
+        return (
+          premiumA - premiumB
+        );
+      });
+
+    /* =====================================
+       BEST POLICY
+    ===================================== */
+
+    const bestPolicy =
+      sortedPolicies[0];
+
+    /* =====================================
+       SUCCESS
+    ===================================== */
+
+    return {
+      ...state,
+
+      nextStep: "COMPLETE",
+
+      insuranceResult: {
+        success: true,
+
+        recommended_policies:
+          sortedPolicies,
+
+        best_policy:
+          bestPolicy,
+
+        total_quotes:
+          sortedPolicies.length,
+
+        generated_at:
+          new Date()
+      }
+    };
+  } catch (error) {
+    console.log(
+      "INSURANCE NODE ERROR:"
+    );
+
+    console.log(error);
+
+    return {
+      ...state,
+
+      nextStep: "END",
+
+      insuranceResult: {
+        success: false,
+
+        message:
+          "Insurance workflow failed."
+      }
+    };
+  }
 };
 
 module.exports = {

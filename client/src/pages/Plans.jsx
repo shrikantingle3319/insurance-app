@@ -19,21 +19,30 @@ const Plans = () => {
   const navigate =
     useNavigate();
 
+  console.log(
+    "PLANS PAGE DATA:",
+    location.state
+  );
+
   /* =====================================
      STATE FROM NAVIGATION
   ===================================== */
 
   const {
 
-    policies = [],
+  policies = [],
 
-    validation = null,
+  validation = null,
 
-    question = "",
+  question = "",
 
-    vehicleData = {}
+  vehicleData = {},
 
-  } = location.state || {};
+  bestPolicy = null,
+
+  totalQuotes = 0
+
+} = location.state || {};
 
   /* =====================================
      HANDLE OWNER RESPONSE
@@ -555,6 +564,57 @@ const Plans = () => {
           )
         }
 
+{
+  bestPolicy && (
+
+    <div className="bg-green-100 border border-green-300 p-6 rounded-2xl shadow-lg mb-8">
+
+      <h2 className="text-2xl font-bold text-green-700">
+
+        🏆 Best Recommended Policy
+
+      </h2>
+
+      <div className="mt-4">
+
+        <p>
+
+          <strong>Insurer:</strong>
+          {" "}
+          {bestPolicy.insurer}
+
+        </p>
+
+        <p>
+
+          <strong>Policy:</strong>
+          {" "}
+          {bestPolicy.policy_name}
+
+        </p>
+
+        <p>
+
+          <strong>Premium:</strong>
+          {" "}
+          ₹{bestPolicy.premium}
+
+        </p>
+
+        <p>
+
+          <strong>Total Quotes Generated:</strong>
+          {" "}
+          {totalQuotes}
+
+        </p>
+
+      </div>
+
+    </div>
+  )
+}
+
         {/* ===============================
             INSURANCE POLICIES
         =============================== */}
@@ -752,45 +812,15 @@ const Plans = () => {
                             Key Benefits
                           </h4>
 
-                          <ul className="space-y-2">
+                          <div className="bg-gray-50 p-4 rounded-xl">
 
-                            {
+                            <p className="text-gray-700">
 
-                              policy
-                              ?.benefits
-                              ?.map(
+                              {policy.benefits}
 
-                                (
-                                  benefit,
-                                  i
-                                ) => (
+                            </p>
 
-                                  <li
-
-                                    key={i}
-
-                                    className="flex items-start"
-
-                                  >
-
-                                    <span className="text-green-500 mr-2">
-
-                                      ✓
-
-                                    </span>
-
-                                    <span>
-
-                                      {benefit}
-
-                                    </span>
-
-                                  </li>
-                                )
-                              )
-                            }
-
-                          </ul>
+                          </div>
 
                         </div>
 

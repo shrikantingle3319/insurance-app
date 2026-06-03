@@ -220,38 +220,65 @@ const Quote = () => {
           );
 
         /* ===============================
-           SUCCESS
+          SUCCESS
         =============================== */
 
+        console.log(
+          "API RESPONSE:",
+          response.data
+        );
+
+        const workflow =
+          response.data.workflow;
+
         if (
-
-          response.data.status ===
-          "SUCCESS"
-
+          workflow?.insuranceResult
+            ?.success
         ) {
 
           setCurrentStep(5);
 
           navigate(
-
             "/plans",
-
             {
-
               state: {
 
                 validation:
-
-                  response.data
-                  .validation,
+                  workflow.validationResult,
 
                 policies:
+                  workflow.insuranceResult
+                    .recommended_policies,
 
-                  response.data
-                  .recommended_policies
+                bestPolicy:
+                  workflow.insuranceResult
+                    .best_policy,
+
+                totalQuotes:
+                  workflow.insuranceResult
+                    .total_quotes
               }
             }
           );
+
+          return;
+        }
+
+        if (
+          !workflow?.insuranceResult
+            ?.success
+        ) {
+
+          setError(
+
+            workflow
+              ?.insuranceResult
+              ?.message ||
+
+            "No insurance plans found."
+          );
+
+          return;
         }
 
         /* ===============================
