@@ -137,10 +137,6 @@ insurance-app/
 │
 ├── server/
 │    │
-│    ├── agents/
-│    │   ├── quoteAgent.js
-│    │   └── validationAgent.js
-│    │
 │    ├── controllers/
 │    │   ├── aiController.js
 │    │   ├── aiPlansController.js
@@ -152,16 +148,7 @@ insurance-app/
 │    │    ├── vehicleQueries.js
 │    │    └── db.js
 │    │
-│    ├── graphs/
-│    │   ├── insuranceGraph.js
-│    │   └── testGraph.js
-│    │
 │    ├──node_modules/
-│    │
-│    ├──nodes/
-│    │   ├── insuranceNode.js
-│    │   ├── ownershipQuestionNode.js
-│    │   └── validationNode.js
 │    │
 │    ├── routes/
 │    │   ├── aiRoutes.js

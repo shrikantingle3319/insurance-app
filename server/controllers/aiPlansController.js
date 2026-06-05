@@ -1,84 +1,261 @@
-const {
-
-  insuranceGraph
-
-} = require(
-  "../graphs/insuranceGraph"
-);
+const axios = require("axios");
 
 /* =========================================
    GENERATE AI PLANS
 ========================================= */
 
-const generateAIPlans =
-  async (req, res) => {
+const generateAIPlans = async (req, res) => {
 
-    try {
+  try {
 
-      /* =============================
-         VEHICLE DATA
-      ============================= */
+    const vehicleData = req.body;
 
-      const vehicleData =
-        req.body;
+    console.log("\n=================================");
+    console.log("Incoming Vehicle Data:");
+    console.log(
+      JSON.stringify(
+        vehicleData,
+        null,
+        2
+      )
+    );
+    console.log("=================================\n");
 
-      console.log(
-        "Incoming Vehicle Data:"
-      );
+    const activityPayload = {
 
-      console.log(vehicleData);
+      type: "message",
 
-      /* =============================
-         INVOKE GRAPH
-      ============================= */
+      id: Date.now().toString(),
 
-      const graphResponse =
+      timestamp:
+        new Date().toISOString(),
 
-        await insuranceGraph.invoke({
+      serviceUrl:
+        "http://localhost",
 
+      channelId:
+        "webchat",
+
+      from: {
+        id: "user1",
+        name: "PolicyPilot User"
+      },
+
+      conversation: {
+        id: `conv-${Date.now()}`
+      },
+
+      recipient: {
+        id: "policypilot"
+      },
+
+      text:
+        JSON.stringify(
           vehicleData
-        });
+        )
+    };
 
-      console.log(
-        "GRAPH RESPONSE:"
+    console.log(
+      "ACTIVITY PAYLOAD:"
+    );
+
+    console.log(
+      JSON.stringify(
+        activityPayload,
+        null,
+        2
+      )
+    );
+
+    const response =
+      await axios.post(
+
+        process.env
+          .POLICYPILOT_WORKFLOW_ENDPOINT,
+
+        activityPayload,
+
+        {
+          headers: {
+
+            "Content-Type":
+              "application/json",
+
+            "api-key":
+              process.env
+                .FOUNDRY_API_KEY
+          }
+        }
       );
 
-      console.log(graphResponse);
+    console.log(
+      "\n========== WORKFLOW RESPONSE =========="
+    );
 
-      /* =============================
-         RETURN RESPONSE
-      ============================= */
+    console.log(
+      "\nSTATUS:"
+    );
 
-      return res.status(200).json({
+    console.log(
+      response.status
+    );
 
-        success: true,
+    console.log(
+      "\nHEADERS:"
+    );
 
-        workflow:
-          graphResponse
-      });
+    console.log(
+      response.headers
+    );
 
-    } catch (error) {
+    console.log(
+      "\nOPERATION LOCATION:"
+    );
+
+    console.log(
+      response.headers[
+        "operation-location"
+      ]
+    );
+
+    console.log(
+      "\nLOCATION:"
+    );
+
+    console.log(
+      response.headers[
+        "location"
+      ]
+    );
+
+    console.log(
+      "\nSESSION ID:"
+    );
+
+    console.log(
+      response.headers[
+        "x-agent-session-id"
+      ]
+    );
+
+    console.log(
+      "\nINVOCATION ID:"
+    );
+
+    console.log(
+      response.headers[
+        "x-agent-invocation-id"
+      ]
+    );
+
+    console.log(
+      "\nDATA:"
+    );
+
+    console.log(
+      response.data
+    );
+
+    console.log(
+      "\n=======================================\n"
+    );
+
+    return res.status(200).json({
+
+      success: true,
+
+      workflow:
+        response.data,
+
+      status:
+        response.status,
+
+      operationLocation:
+        response.headers[
+          "operation-location"
+        ],
+
+      location:
+        response.headers[
+          "location"
+        ],
+
+      sessionId:
+        response.headers[
+          "x-agent-session-id"
+        ],
+
+      invocationId:
+        response.headers[
+          "x-agent-invocation-id"
+        ]
+    });
+
+  } catch (error) {
+
+    console.log(
+      "\n========== WORKFLOW ERROR =========="
+    );
+
+    console.log(
+      "\nMESSAGE:"
+    );
+
+    console.log(
+      error.message
+    );
+
+    if (
+      error.response
+    ) {
 
       console.log(
-        "AI PLANS CONTROLLER ERROR:"
+        "\nSTATUS:"
       );
 
-      console.log(error);
+      console.log(
+        error.response.status
+      );
 
-      return res.status(500).json({
+      console.log(
+        "\nHEADERS:"
+      );
 
-        success: false,
+      console.log(
+        error.response.headers
+      );
 
-        message:
-          "AI workflow failed",
+      console.log(
+        "\nDATA:"
+      );
 
-        error:
-          error.message
-      });
+      console.log(
+        JSON.stringify(
+          error.response.data,
+          null,
+          2
+        )
+      );
     }
+
+    console.log(
+      "\n====================================\n"
+    );
+
+    return res.status(500).json({
+
+      success: false,
+
+      message:
+        "Workflow execution failed",
+
+      error:
+        error.response?.data ||
+        error.message
+    });
+  }
 };
 
 module.exports = {
-
   generateAIPlans
 };
